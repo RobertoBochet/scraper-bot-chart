@@ -1,0 +1,12 @@
+apiVersion: v2
+name: scraper-bot
+description: A Helm chart for the scraper bot
+
+type: application
+
+version: 0.1.0
+
+dependencies:
+  - name: redis
+    version: "18.0.2"
+    repository: "https://charts.bitnami.com/bitnami"

@@ -1,0 +1,39 @@
+name: "Publish chart"
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  publish-chart:
+    name: "Publish chart to github OCI"
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set chart version
+      run: |
+        VERSION="${GITHUB_REF/refs\/tags\//}"
+        VERSION="${VERSION/v/}"
+        sed -i "s|^version:.*|version:\ \"${VERSION}\"|g" Chart.yaml
+    - name: Set chart name for ghcr.io repo
+      run: |
+        NAME=$(echo ${{ github.repository }} | rev | cut -d "/" -f 1 | rev)
+        sed -i "s|^name:.*|name:\ \"${NAME}\"|g" Chart.yaml
+    - name: Helm tool installer
+      uses: Azure/setup-helm@v4.2.0
+      with:
+        version: "3.15.2"
+    - name: Login into registry
+      run: |
+        echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io --username ${{ github.repository_owner }} --password-stdin
+    - name: Build chart
+      run: |
+        helm dependency update
+        helm package .
+    - name: Push to registry
+      run: |
+        REGISTRY="oci://ghcr.io/$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')"
+        helm push "$(find *.tgz)" $REGISTRY

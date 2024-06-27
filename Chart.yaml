@@ -1,0 +1,17 @@
+apiVersion: v2
+name: scraper-bot
+description: A Helm chart for the scraper bot
+sources:
+  - https://github.com/RobertoBochet/scraper-bot-chart.git
+maintainers:
+  - name: Roberto Bochet
+    email: r@robertobochet.me
+
+type: application
+
+version: 0.1.0
+
+dependencies:
+  - name: redis
+    version: 19.6.0
+    repository: "https://charts.bitnami.com/bitnami"

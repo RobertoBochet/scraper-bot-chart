@@ -1,9 +1,9 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ include "chart.fullname" . }}
+  name: {{ include "scraperBot.fullname" . }}
   labels:
-    {{- include "chart.labels" . | nindent 4 }}
+    {{- include "scraperBot.labels" . | nindent 4 }}
 spec:
   {{ toYaml .Values.cronJob | nindent 2 }}
   jobTemplate:
@@ -13,7 +13,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "chart.selectorLabels" . | nindent 8 }}
+        {{- include "scraperBot.selectorLabels" . | nindent 8 }}
     spec:
       template:
         metadata:
@@ -22,35 +22,45 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           labels:
-            {{- include "chart.selectorLabels" . | nindent 12 }}
+            {{- include "scraperBot.selectorLabels" . | nindent 12 }}
         spec:
           {{- with .Values.imagePullSecrets }}
           imagePullSecrets:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           restartPolicy: "Never"
-          serviceAccountName: {{ include "chart.serviceAccountName" . }}
+          serviceAccountName: {{ include "scraperBot.serviceAccountName" . }}
           securityContext:
             {{- toYaml .Values.podSecurityContext | nindent 12 }}
           containers:
             - name: {{ .Chart.Name }}
               securityContext:
                 {{- toYaml .Values.securityContext | nindent 16 }}
-              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
               imagePullPolicy: {{ .Values.image.pullPolicy }}
               resources:
                 {{- toYaml .Values.resources | nindent 16 }}
               env:
-                - name: "SB__REDIS"
+                {{- if .Values.diskCache.enabled }}
+                - name: "SB__CACHE"
+                  value: diskcache:/var/cache/scraper-bot
+                {{- else if .Values.redis.enabled }}
+                - name: "SB__CACHE"
                   valueFrom:
                     secretKeyRef:
                       name: {{ include "common.names.fullname" .Subcharts.redis }}-svcbind
                       key: uri
-              workingDir: /
+                {{- else }}
+                []
+                {{- end }}
               volumeMounts:
-                - mountPath: /config.yaml
+                - mountPath: /etc/scraper-bot/config.yaml
                   name: config
                   subPath: config.yaml
+              {{- if .Values.diskCache.enabled }}
+                - mountPath: /var/cache/scraper-bot
+                  name: cache
+              {{- end }}
           {{- with .Values.nodeSelector }}
           nodeSelector:
             {{- toYaml . | nindent 12 }}
@@ -66,4 +76,9 @@ spec:
           volumes:
             - name: config
               secret:
-                secretName: {{ include "chart.fullname" . }}-config
+                secretName: {{ include "scraperBot.fullname" . }}-config
+            {{- if .Values.diskCache.enabled }}
+            - name: cache
+              persistentVolumeClaim:
+                claimName: {{ .Values.diskCache.persistence.existingClaim | default (include "scraperBot.cache.fullname" .) }}
+            {{- end }}

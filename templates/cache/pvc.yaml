@@ -1,0 +1,16 @@
+{{- if and .Values.diskCache.enabled (not .Values.diskCache.persistence.existingClaim) }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ include "scraperBot.cache.fullname" . }}
+  labels:
+   {{- include "scraperBot.cache.labels" . | nindent 4 }}
+spec:
+  storageClassName: {{ .Values.diskCache.persistence.storageClass }}
+  accessModes:
+    - {{ .Values.diskCache.persistence.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.diskCache.persistence.size | quote }}
+ {{- end }}
+

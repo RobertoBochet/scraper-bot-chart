@@ -3,4 +3,4 @@
 **/charts/*.tgz
 
 # custom values files
-*.y[a]ml
+/*.y[a]ml

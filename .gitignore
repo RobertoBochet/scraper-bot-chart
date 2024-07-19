@@ -4,3 +4,6 @@
 
 # custom values files
 /*.y[a]ml
+
+# release charts
+/*.tgz

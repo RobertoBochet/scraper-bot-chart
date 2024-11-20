@@ -8,7 +8,7 @@ metadata:
 spec:
   storageClassName: {{ .Values.diskCache.persistence.storageClass }}
   accessModes:
-    - {{ .Values.diskCache.persistence.accessMode | quote }}
+    {{- .Values.diskCache.persistence.accessModes | toYaml | nindent 4 }}
   resources:
     requests:
       storage: {{ .Values.diskCache.persistence.size | quote }}

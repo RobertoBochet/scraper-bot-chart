@@ -1,20 +1,28 @@
 apiVersion: v2
 name: scraper-bot
-description: A Helm chart for the scraper bot
+version: 0.0.0-dev
+description: Scraper Bot helm chart
+type: application
+keywords:
+  - scraper-bot
+  - scraper
+  - web-scraper
+  - apprise
+  - telegram-bot
+  - playwright
+  - python
+  - automation
+home: https://github.com/RobertoBochet/scraper-bot-chart.git
 sources:
   - https://github.com/RobertoBochet/scraper-bot-chart.git
-maintainers:
-  - name: Roberto Bochet
-    email: r@robertobochet.me
-
-type: application
-
-version: 0.0.0-dev
-
-appVersion: 1.2.0
-
 dependencies:
   - name: redis
     version: 19.6.0
     repository: "https://charts.bitnami.com/bitnami"
     condition: redis.enabled
+maintainers:
+  - name: Roberto Bochet
+    email: r@robertobochet.me
+appVersion: 1.3.2
+annotations:
+  artifacthub.io/license: GPL-3.0-or-later

@@ -1,35 +1,61 @@
+
+## Credits:
+## Chart is heavily based on gitea one (https://gitea.com/gitea/helm-chart)
+## They worked great, so there is no need to reinvent the wheel.
+
+
+## @section Common parameters
+## @param nameOverride String to partially override common.names.fullname
+nameOverride: ""
+## @param fullnameOverride String to fully override common.names.fullname
+fullnameOverride: ""
+## @param imagePullSecrets Secret to use for pulling the image
+imagePullSecrets: []
+
+## @section Image
+## @param image.registry image registry, e.g. gcr.io,docker.io
+## @param image.repository Image to start for this pod
+## @param image.tag Visit: Image tag. Defaults to `appVersion` within Chart.yaml.
+## @param image.pullPolicy Image pull policy
 image:
-  repository: ghcr.io/robertobochet/scraper-bot
+  registry: ghcr.io
+  repository: robertobochet/scraper-bot
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
-
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
-
-podAnnotations: {}
-
+## @section Security
+## @param podSecurityContext Pod security context
 podSecurityContext: {}
-  # fsGroup: 2000
+# fsGroup: 2000
 
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+## @param containerSecurityContext Security context
+containerSecurityContext: {}
+#   allowPrivilegeEscalation: false
+#   capabilities:
+#     drop:
+#       - ALL
+#     add:
+#       - SYS_CHROOT
+#   privileged: false
+#   readOnlyRootFilesystem: true
+#   runAsGroup: 1000
+#   runAsNonRoot: true
+#   runAsUser: 1000
 
+## @section CronJob
+## @param cronJob.schedule Defines how often the job has to run. It uses the [Cron syntax](https://en.wikipedia.org/wiki/Cron)
+## @param cronJob.failedJobsHistoryLimit Specifies the number of failed finished jobs to keep
+## @param cronJob.successfulJobsHistoryLimit Specifies the number of successful finished jobs to keep
+## @param cronJob.concurrencyPolicy Specifies how to treat concurrent executions of a Job that is created by the CronJob
+cronJob:
+  schedule: "0 * * * *"
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 1
+  concurrencyPolicy: Replace
+
+## @section Job
+## @param resources Kubernetes resources
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
@@ -40,39 +66,49 @@ resources: {}
   #   memory: 128Mi
   # requests:
   #   cpu: 100m
-  #   memory: 128Mi
+#   memory: 128Mi
 
+## @param nodeSelector NodeSelector for the job
 nodeSelector: {}
 
+## @param tolerations Tolerations for the job
 tolerations: []
 
+## @param affinity Affinity for the job
 affinity: {}
 
-cronJob:
-  # Defines how often the job has to run
-  # It use the Cron syntax (https://en.wikipedia.org/wiki/Cron)
-  # Default value "0 * * * *" runs the job each hour at XX:00
-  schedule: "0 * * * *"
-  failedJobsHistoryLimit: 1
-  successfulJobsHistoryLimit: 1
-  concurrencyPolicy: Replace
-
-# Defines the config of the scraper bot in yaml syntax
-# You have to refer to main project for the documentation (https://github.com/RobertoBochet/scraper-bot)
+## @param config [default: ] Defines the config of the scraper bot in yaml syntax. Refer to [main project for the documentation](https://github.com/RobertoBochet/scraper-bot)
 config: |
   # config.yaml content
 
+## @section diskCache
+## @param diskCache.enabled Enable diskCache
+## @param diskCache.persistence.existingClaim Use an existing claim to store repository information
+## @param diskCache.persistence.size Size of the pvc
+## @param diskCache.persistence.accessModes AccessMode for persistence
+## @param diskCache.persistence.storageClass StorageClass for the pvc
 diskCache:
   enabled: true
-
   persistence:
     existingClaim: ""
-    storageClass: ""
-    accessMode: ReadWriteOnce
     size: 2Gi
+    accessModes:
+      - ReadWriteOnce
+    storageClass: ""
 
+## @section redis
+## @param redis.enabled Enable redis standalone or replicated
+## @param redis.architecture Whether to use standalone or replication
+## @param redis.serviceBindings.enabled Enable redis service-binding secret
+## @param redis.master.persistence.enabled Enable persistence storage
+## @param redis.master.persistence.storageClass StorageClass for the pvc
+## @param redis.master.persistence.size Size of the pvc
+## @descriptionStart
+## Redis and DiskCache cannot be enabled at the same time.
+## @descriptionEnd
 redis:
   enabled: false
+  architecture: standalone
   serviceBindings:
     enabled: true
   master:
@@ -80,5 +116,3 @@ redis:
       enabled: true
       storageClass: ""
       size: 2Gi
-  replica:
-    replicaCount: 0
